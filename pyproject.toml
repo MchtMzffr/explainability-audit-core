@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "explainability-audit-core"
+version = "0.1.0"
+description = "Domain-agnostic explainability and audit: reason codes and guard-chain explanation for decision transparency."
+requires-python = ">=3.11"
+dependencies = ["decision-schema>=0.2.2,<0.3"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "ruff"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["explainability_audit_core*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

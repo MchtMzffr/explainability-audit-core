@@ -3,7 +3,15 @@
 # SPDX-License-Identifier: MIT
 """Build explanations from decision outcome and guard chain (domain-agnostic)."""
 
-from explainability_audit_core.model import Explanation, GuardTrigger, ReasonCode
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from explainability_audit_core.model import Explanation, ExplanationArtifact, GuardTrigger, ReasonCode
+from explainability_audit_core.reason_templates import REASON_TEMPLATES
+
+if TYPE_CHECKING:
+    from decision_schema.packet_v2 import PacketV2
 
 
 def explain(
@@ -75,3 +83,57 @@ def _build_summary(allowed: bool, reason_codes: list[ReasonCode]) -> str:
     if ReasonCode.THRESHOLD_EXCEEDED in reason_codes:
         return "Decision denied: threshold exceeded."
     return "Decision denied."
+
+
+def explain_from_packet(packet: "PacketV2") -> ExplanationArtifact:
+    """
+    Build ExplanationArtifact from PacketV2 trace (INV-EXPL-MIN-1, INV-EXPL-DET-1).
+
+    Reads final_action (allowed, action), mismatch (reason_codes, flags), mdm (reasons).
+    primary_reason_code = first failing reason when allowed=False.
+    """
+    from explainability_audit_core.version import __version__
+
+    run_id = getattr(packet, "run_id", "") or ""
+    step = getattr(packet, "step", 0) or 0
+    final = getattr(packet, "final_action", None) or {}
+    mismatch = getattr(packet, "mismatch", None) or {}
+    mdm = getattr(packet, "mdm", None) or {}
+
+    allowed = final.get("allowed", True)
+    reason_codes = list(mismatch.get("reason_codes") or [])
+    flags = list(mismatch.get("flags") or [])
+    proposal_reasons = list(mdm.get("reasons") or [])
+
+    evidence_available = ["final_action", "mismatch", "mdm.reasons"]
+    evidence_used: list[str] = ["final_action"]
+    if reason_codes:
+        evidence_used.append("mismatch.reason_codes")
+    if flags:
+        evidence_used.append("mismatch.flags")
+    if proposal_reasons:
+        evidence_used.append("mdm.reasons")
+    coverage = len(evidence_used) / len(evidence_available) if evidence_available else 0.0
+
+    if allowed:
+        decision = "ALLOWED"
+        primary_reason_code = "ALLOWED"
+        if not reason_codes:
+            reason_codes = ["ALLOWED"]
+    else:
+        decision = "DENIED"
+        primary_reason_code = reason_codes[0] if reason_codes else "FAIL_CLOSED"
+        if not reason_codes:
+            reason_codes = [primary_reason_code]
+
+    return ExplanationArtifact(
+        run_id=run_id,
+        step=step,
+        decision=decision,
+        primary_reason_code=primary_reason_code,
+        reason_codes=reason_codes,
+        evidence_refs=evidence_used,
+        coverage=round(coverage, 2),
+        redaction_ok=True,
+        version=__version__,
+    )

@@ -45,3 +45,35 @@ class Explanation:
             ],
             "summary": self.summary,
         }
+
+
+@dataclass
+class ExplanationArtifact:
+    """
+    Trace-derived explanation artifact (PacketV2 → audit output).
+    INV-EXPL-*: deterministic, primary_reason_code for denied, coverage, redaction_ok.
+    """
+
+    run_id: str
+    step: int
+    decision: str  # ALLOWED | DENIED
+    primary_reason_code: str
+    reason_codes: list[str] = field(default_factory=list)
+    evidence_refs: list[str] = field(default_factory=list)
+    coverage: float = 0.0
+    redaction_ok: bool = True
+    version: str = "0.1.0"
+
+    def to_dict(self) -> dict:
+        """Byte-stable JSON-serializable dict (INV-EXPL-DET-1)."""
+        return {
+            "run_id": self.run_id,
+            "step": self.step,
+            "decision": self.decision,
+            "primary_reason_code": self.primary_reason_code,
+            "reason_codes": list(self.reason_codes),
+            "evidence_refs": list(self.evidence_refs),
+            "coverage": self.coverage,
+            "redaction_ok": self.redaction_ok,
+            "version": self.version,
+        }

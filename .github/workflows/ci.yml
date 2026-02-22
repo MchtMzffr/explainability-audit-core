@@ -16,6 +16,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  secret_scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -38,7 +48,13 @@ jobs:
           cache: pip
 
       - name: Install test tooling
-        run: pip install -U pip pytest build pytest-json-report || (sleep 15 && pip install -U pip pytest build pytest-json-report)
+        run: pip install -U pip pytest build pytest-json-report pytest-cov ruff || (sleep 15 && pip install -U pip pytest build pytest-json-report pytest-cov ruff)
+
+      - name: Ruff check
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format --check .
 
       - name: Install decision-schema (pinned, fallback to git)
         run: |
@@ -47,8 +63,16 @@ jobs:
       - name: Install package
         run: pip install -e .
 
+      - name: Vulnerability scan (pip audit)
+        run: |
+          pip install -U 'pip>=26.0'
+          pip install pip-audit && pip-audit
+
+      - name: INV-BUILD-1 (package build)
+        run: python -m build
+
       - name: Run tests
-        run: pytest tests/ -v --json-report --json-report-file=pytest-report.json
+        run: pytest tests/ -v --json-report --json-report-file=pytest-report.json --cov=. --cov-report=term-missing --cov-fail-under=30 --no-cov-on-fail
 
       - name: Upload pytest report
         uses: actions/upload-artifact@v4

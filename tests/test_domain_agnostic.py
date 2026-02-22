@@ -10,7 +10,7 @@ from pathlib import Path
 def test_no_cross_core_imports() -> None:
     """Package must not import from other ecosystem cores (only decision_schema)."""
     pkg_root = Path(__file__).resolve().parent.parent / "explainability_audit_core"
-    allowed = {"decision_schema", "explainability_audit_core", "dataclasses", "enum", "typing"}
+    allowed = {"__future__", "decision_schema", "explainability_audit_core", "dataclasses", "enum", "typing"}
     for path in pkg_root.rglob("*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):

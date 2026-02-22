@@ -89,8 +89,12 @@ def explain_from_packet(packet: "PacketV2") -> ExplanationArtifact:
     """
     Build ExplanationArtifact from PacketV2 trace (INV-EXPL-MIN-1, INV-EXPL-DET-1).
 
-    Reads final_action (allowed, action), mismatch (reason_codes, flags), mdm (reasons).
-    primary_reason_code = first failing reason when allowed=False.
+    Expected packet shape (dict-like or PacketV2): run_id, step, final_action (dict with
+    "allowed", "action"), mismatch (dict with "reason_codes", "flags"), mdm (dict with
+    "reasons"). primary_reason_code = first failing reason when allowed=False.
+
+    Reason code mapping: known codes (e.g. ops_deny_actions, guard names) map to ReasonCode
+    enum; unknown or namespaced reason_codes map to ReasonCode.UNKNOWN (INV-EXPL-RC-1).
     """
     from explainability_audit_core.version import __version__
 

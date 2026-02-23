@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: MIT
 """Tests for explain() and Explanation (domain-agnostic)."""
 
-import pytest
 from explainability_audit_core import explain, ReasonCode
 
 

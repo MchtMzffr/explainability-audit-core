@@ -7,8 +7,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from explainability_audit_core.model import Explanation, ExplanationArtifact, GuardTrigger, ReasonCode
-from explainability_audit_core.reason_templates import REASON_TEMPLATES
+from explainability_audit_core.model import (
+    Explanation,
+    ExplanationArtifact,
+    GuardTrigger,
+    ReasonCode,
+)
 
 if TYPE_CHECKING:
     from decision_schema.packet_v2 import PacketV2
@@ -35,7 +39,9 @@ def explain(
     if fail_closed:
         reason_codes.append(ReasonCode.FAIL_CLOSED)
         triggered_guards.append(
-            GuardTrigger(guard_name="system", reason_code=ReasonCode.FAIL_CLOSED, detail="exception")
+            GuardTrigger(
+                guard_name="system", reason_code=ReasonCode.FAIL_CLOSED, detail="exception"
+            )
         )
     if guard_chain:
         for name, reason in guard_chain:

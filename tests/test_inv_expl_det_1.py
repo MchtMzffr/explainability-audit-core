@@ -5,7 +5,6 @@
 
 import json
 
-import pytest
 from decision_schema.packet_v2 import PacketV2
 
 from explainability_audit_core import explain_from_packet
